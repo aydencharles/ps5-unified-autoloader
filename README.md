@@ -8,11 +8,11 @@
 
 通过 elfldr 加载时（例如作为破解链的一部分），`autoloader.elf` 将执行以下操作：
 
-1. **终止 YouTube**（PPSA01650/01651/01652）如果正在运行
+1. **终止入口应用**（YouTube `PPSA01650`/`01651`/`01652` 或 Artemis Lua 游戏如 Aerial Life、Aibeya 等）如果正在运行
 2. **终止光盘播放器**（NPXS40140）如果正在运行，使用谨慎的 suspend→wait→kill 序列
 3. **等待 elfldr** 在端口 9021 就绪（最长 10 秒）
 4. **查找** `autoload.txt` 配置文件，优先级从高到低：
-   - **USB 上应用专属目录**（`/mnt/usb[0-7]/ps5_autoloader_<app>/autoload.txt`，`<app>` 对于光盘播放器为 `bdjb`，对于 YouTube 则为 Title ID 如 `PPSA01650`）
+   - **USB 上应用专属目录**（`/mnt/usb[0-7]/ps5_autoloader_<app>/autoload.txt`，`<app>` 对于光盘播放器为 `bdjb`，对于入口应用则为 Title ID，如 `PPSA01650`）
    - **`/data` 下应用专属目录**（`/data/ps5_autoloader_<app>/autoload.txt`）
    - **USB 上通用目录**（`/mnt/usb[0-7]/ps5_autoloader/autoload.txt`）
    - **`/data` 下通用目录**（`/data/ps5_autoloader/autoload.txt`）
