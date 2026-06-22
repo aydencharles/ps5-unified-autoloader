@@ -5,7 +5,7 @@
 #   ./build_release.sh              # download pre-built pldmgr.elf (default)
 #   ./build_release.sh -d           # same as above
 #   ./build_release.sh --download-deps
-#   ./build_release.sh -b           # build pldmgr from source (uses pldmgr's own Docker)
+#   ./build_release.sh -b           # build pldmgr from source
 #   ./build_release.sh --build-deps
 set -e
 cd "$(dirname "$0")"
@@ -45,7 +45,6 @@ else
 fi
 
 OUTPUT_ELF="autoloader_v${VERSION}_${SHORT_HASH}.elf"
-IMAGE_NAME="ps5-unified-autoloader-sdk"
 
 echo "=== ps5-unified-autoloader v${VERSION} (${SHORT_HASH}) ==="
 
@@ -53,7 +52,7 @@ echo "=== ps5-unified-autoloader v${VERSION} (${SHORT_HASH}) ==="
 # Step 1: Obtain pldmgr.elf
 # -----------------------------------------------------------------------
 if [ "$DEP_ACTION" = "build" ]; then
-    echo "[1/3] Building pldmgr from source (uses pldmgr's own Docker image)..."
+    echo "[1/2] Building pldmgr from source..."
 
     if [ ! -e "third_party/ps5-payload-manager/.git" ]; then
         echo "      Error: ps5-payload-manager submodule not initialised."
@@ -73,9 +72,9 @@ if [ "$DEP_ACTION" = "build" ]; then
     echo "      pldmgr.elf obtained from source build: $(basename "$PLDMGR_ELF")"
 
 else
-    echo "[1/3] Downloading pre-built pldmgr.elf from GitHub releases..."
+    echo "[1/2] Downloading pre-built pldmgr.elf from GitHub releases..."
 
-    PLDMGR_URL=$(curl -s https://api.github.com/repos/itsPLK/ps5-payload-manager/releases/latest \
+    PLDMGR_URL=$(curl -s https://api.github.com/repos/aydencharles/ps5-payload-manager/releases/latest \
         | grep "browser_download_url" \
         | grep 'pldmgr_v.*\.elf"' \
         | head -n 1 \
@@ -93,23 +92,10 @@ else
 fi
 
 # -----------------------------------------------------------------------
-# Step 2: Build / verify the Docker image
+# Step 2: Build autoloader.elf with the locally installed SDK
 # -----------------------------------------------------------------------
-echo "[2/3] Checking Docker image (${IMAGE_NAME})..."
-
-if [[ "$(docker images -q "$IMAGE_NAME" 2>/dev/null)" == "" ]]; then
-    echo "      Image not found. Building (this may take a few minutes)..."
-    docker build -t "$IMAGE_NAME" -f Dockerfile.sdk .
-    echo "      Docker image built."
-else
-    echo "      Docker image already present."
-fi
-
-# -----------------------------------------------------------------------
-# Step 3: Build autoloader.elf inside Docker
-# -----------------------------------------------------------------------
-echo "[3/3] Building autoloader.elf via Docker..."
-docker run --rm -v "$(pwd)":/src -w /src "$IMAGE_NAME" make clean all
+echo "[2/2] Building autoloader.elf with local SDK..."
+make clean all
 
 # -----------------------------------------------------------------------
 # Rename to versioned output

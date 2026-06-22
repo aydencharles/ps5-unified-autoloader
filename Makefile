@@ -1,16 +1,18 @@
 # ps5-unified-autoloader Makefile
 
 # -----------------------------------------------------------------------
-# Tools
-# -----------------------------------------------------------------------
-CC    := /opt/ps5-payload-sdk/bin/prospero-clang
-STRIP := /opt/ps5-payload-sdk/bin/prospero-strip
-
-# -----------------------------------------------------------------------
 # SDK paths
 # -----------------------------------------------------------------------
-SDK    := /opt/ps5-payload-sdk
+SDK    ?= $(PS5_PAYLOAD_SDK)
 TARGET := $(SDK)/target
+
+# -----------------------------------------------------------------------
+# Tools
+# -----------------------------------------------------------------------
+ifeq ($(origin CC), default)
+CC := $(SDK)/bin/prospero-clang
+endif
+STRIP ?= $(SDK)/bin/prospero-strip
 
 # -----------------------------------------------------------------------
 # Build config
@@ -29,9 +31,15 @@ PLDMGR_ELF_C := pldmgr_elf.c
 # -----------------------------------------------------------------------
 # Targets
 # -----------------------------------------------------------------------
-.PHONY: all clean dist-clean
+.PHONY: all clean dist-clean check-sdk
 
 all: $(ELF)
+
+.PHONY: check-sdk
+check-sdk:
+	@test -n "$(SDK)" || (echo "ERROR: PS5_PAYLOAD_SDK is not set." >&2; exit 1)
+	@test -x "$(CC)" || (echo "ERROR: PS5 Payload SDK compiler not found: $(CC)" >&2; exit 1)
+	@test -x "$(STRIP)" || (echo "ERROR: PS5 Payload SDK strip tool not found: $(STRIP)" >&2; exit 1)
 
 # Embed pldmgr.elf as a C byte array (included directly by src/main.c)
 $(PLDMGR_ELF_C): $(PLDMGR_ELF)
@@ -40,7 +48,7 @@ $(PLDMGR_ELF_C): $(PLDMGR_ELF)
 
 # Build autoloader.elf — pldmgr_elf.c is #include-d by src/main.c,
 # so it must NOT be passed again as a separate source file.
-$(ELF): $(PLDMGR_ELF_C) $(SRCS)
+$(ELF): $(PLDMGR_ELF_C) $(SRCS) | check-sdk
 	@echo "Building $(ELF)..."
 	$(CC) $(CFLAGS) $(INCLUDES) $(LDFLAGS) -o $@ $(SRCS) $(LIBS)
 	@echo "Stripping $(ELF)..."
