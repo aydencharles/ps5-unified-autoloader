@@ -74,7 +74,7 @@ if [ "$DEP_ACTION" = "build" ]; then
 else
     echo "[1/2] Downloading pre-built pldmgr.elf from GitHub releases..."
 
-    PLDMGR_URL=$(curl -s https://api.github.com/repos/aydencharles/ps5-payload-manager/releases/latest \
+    PLDMGR_URL=$(curl -s https://api.github.com/repos/itsPLK/ps5-payload-manager/releases/latest \
         | grep "browser_download_url" \
         | grep 'pldmgr_v.*\.elf"' \
         | head -n 1 \
