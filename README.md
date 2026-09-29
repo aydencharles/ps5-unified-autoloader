@@ -8,16 +8,17 @@
 
 通过 elfldr 加载时（例如作为破解链的一部分），`autoloader.elf` 将执行以下操作：
 
-1. **终止入口应用**（YouTube `PPSA01650`/`01651`/`01652` 或 Artemis Lua 游戏如 Aerial Life、Aibeya 等）如果正在运行
-2. **终止光盘播放器**（NPXS40140）如果正在运行，使用谨慎的 suspend→wait→kill 序列
-3. **等待 elfldr** 在端口 9021 就绪（最长 10 秒）
-4. **查找** `autoload.txt` 配置文件，优先级从高到低：
+1. **处理 WebKit 浏览器**（`SceNKWebProcess` 正在运行，即浏览器里有页面打开时）—— 不杀进程（会触发系统错误弹窗并重载），而是通过 `pshomeui:navigateToHome` 请求系统返回主界面，由系统自行关闭该进程；同时把入口 ID 置为 `webkit`，以便查找 `ps5_autoloader_webkit` 目录
+2. **终止入口应用**（YouTube `PPSA01650`/`01651`/`01652` 或 Artemis Lua 游戏如 Aerial Life、Aibeya 等）如果正在运行
+3. **终止光盘播放器**（NPXS40140）如果正在运行，使用谨慎的 suspend→wait→kill 序列
+4. **等待 elfldr** 在端口 9021 就绪（最长 10 秒）
+5. **查找** `autoload.txt` 配置文件，优先级从高到低：
    - **USB 上应用专属目录**（`/mnt/usb[0-7]/ps5_autoloader_<app>/autoload.txt`，`<app>` 对于光盘播放器为 `bdjb`，对于入口应用则为 Title ID，如 `PPSA01650`）
    - **`/data` 下应用专属目录**（`/data/ps5_autoloader_<app>/autoload.txt`）
    - **USB 上通用目录**（`/mnt/usb[0-7]/ps5_autoloader/autoload.txt`）
    - **`/data` 下通用目录**（`/data/ps5_autoloader/autoload.txt`）
-5. **如果找到配置文件**：通过 elfldr 依次加载列表中每个 payload
-6. **如果未找到**：自动启动内置的 **Payload Manager**
+6. **如果找到配置文件**：通过 elfldr 依次加载列表中每个 payload
+7. **如果未找到**：自动启动内置的 **Payload Manager**
 
 ## autoload.txt 格式
 

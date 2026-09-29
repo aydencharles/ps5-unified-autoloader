@@ -1,3 +1,5 @@
+**English** | [简体中文](./README.md)
+
 # ps5-unified-autoloader
 
 A standalone PS5 ELF payload that automates loading payloads. This is intended for integration into jailbreak chains rather than direct end-user usage.
@@ -6,16 +8,17 @@ A standalone PS5 ELF payload that automates loading payloads. This is intended f
 
 When loaded via elfldr (e.g. as part of your jailbreak chain), `autoloader.elf`:
 
-1. **Kills YouTube** (PPSA01650/01651/01652) if it is running
-2. **Kills BD Disc Player** (NPXS40140) if it is running, using a careful suspend→wait→kill sequence
-3. **Waits for elfldr** to be ready on port 9021 (up to 10 seconds)
-4. **Looks for** the `autoload.txt` configuration file in the following order (highest priority first):
-   - **App-specific directories on USB** (`/mnt/usb[0-7]/ps5_autoloader_<app>/autoload.txt`, where `<app>` is `bdjb` for BD Disc Player or the Title ID like `PPSA01650` for YouTube)
+1. **Handles the WebKit browser** (`SceNKWebProcess`, running when a browser page is open) — instead of killing the process (which triggers an OS error dialog and a reload), it asks the system to navigate back to the Home screen via `pshomeui:navigateToHome`; the OS closes the process itself. The entry point ID is set to `webkit` so it looks for a `ps5_autoloader_webkit` directory
+2. **Kills the entry point app** (YouTube `PPSA01650`/`01651`/`01652` or Artemis Lua games like Aerial Life, Aibeya, etc.) if it is running
+3. **Kills BD Disc Player** (NPXS40140) if it is running, using a careful suspend→wait→kill sequence
+4. **Waits for elfldr** to be ready on port 9021 (up to 10 seconds)
+5. **Looks for** the `autoload.txt` configuration file in the following order (highest priority first):
+   - **App-specific directories on USB** (`/mnt/usb[0-7]/ps5_autoloader_<app>/autoload.txt`, where `<app>` is `bdjb` for BD Disc Player or the Title ID of the entry point app, e.g. `PPSA01650` for YouTube)
    - **App-specific directory in `/data`** (`/data/ps5_autoloader_<app>/autoload.txt`)
    - **Generic directories on USB** (`/mnt/usb[0-7]/ps5_autoloader/autoload.txt`)
    - **Generic directory in `/data`** (`/data/ps5_autoloader/autoload.txt`)
-5. **If found**: launches each payload listed in the config via elfldr
-6. **If not found**: automatically starts the bundled **Payload Manager**
+6. **If found**: launches each payload listed in the config via elfldr
+7. **If not found**: automatically starts the bundled **Payload Manager**
 
 ## autoload.txt format
 
