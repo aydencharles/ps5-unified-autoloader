@@ -2,18 +2,22 @@
 # ps5-unified-autoloader — Versioned Build Script
 #
 # Usage:
-#   ./build_release.sh              # download pre-built pldmgr.elf (default)
-#   ./build_release.sh -d           # same as above
+#   ./build_release.sh              # build pldmgr locally with the PS5 Payload SDK (default)
+#   ./build_release.sh -d           # download pre-built pldmgr.elf from GitHub releases
 #   ./build_release.sh --download-deps
-#   ./build_release.sh -b           # build pldmgr from source
+#   ./build_release.sh -b           # build pldmgr from source inside Docker
 #   ./build_release.sh --build-deps
+#
+# 默认走本地 SDK：调用同目录下的 build_pldmgr_local.sh。
+# 依赖需先备好（一次性）：
+#   ~/sdk/ps5-build/pldmgr-deps/build_deps_local.sh
 set -e
 cd "$(dirname "$0")"
 
 # -----------------------------------------------------------------------
 # Parse flags
 # -----------------------------------------------------------------------
-DEP_ACTION="download"  # default
+DEP_ACTION="local"  # default: 用本地 SDK 编译 pldmgr
 
 while [[ "$#" -gt 0 ]]; do
     case "$1" in
@@ -51,8 +55,31 @@ echo "=== ps5-unified-autoloader v${VERSION} (${SHORT_HASH}) ==="
 # -----------------------------------------------------------------------
 # Step 1: Obtain pldmgr.elf
 # -----------------------------------------------------------------------
-if [ "$DEP_ACTION" = "build" ]; then
-    echo "[1/2] Building pldmgr from source..."
+if [ "$DEP_ACTION" = "local" ]; then
+    echo "[1/2] Building pldmgr locally with the PS5 Payload SDK..."
+
+    if [ ! -e "third_party/ps5-payload-manager/.git" ]; then
+        echo "      Error: ps5-payload-manager submodule not initialised."
+        echo "      Run: git submodule update --init --recursive"
+        exit 1
+    fi
+
+    if [ ! -x "./build_pldmgr_local.sh" ]; then
+        echo "      Error: ./build_pldmgr_local.sh not found or not executable."
+        echo "      Use ./build_release.sh -d to download the pre-built pldmgr.elf instead."
+        exit 1
+    fi
+
+    ./build_pldmgr_local.sh
+
+    if [ ! -f "pldmgr.elf" ]; then
+        echo "      Error: local build finished but pldmgr.elf not found."
+        exit 1
+    fi
+    echo "      pldmgr.elf built locally: $(ls -lh pldmgr.elf | awk '{print $5}')"
+
+elif [ "$DEP_ACTION" = "build" ]; then
+    echo "[1/2] Building pldmgr from source (Docker)..."
 
     if [ ! -e "third_party/ps5-payload-manager/.git" ]; then
         echo "      Error: ps5-payload-manager submodule not initialised."
@@ -82,7 +109,7 @@ else
 
     if [ -z "$PLDMGR_URL" ]; then
         echo "      Error: Could not find pldmgr release URL."
-        echo "      Try running with -b to build from source instead."
+        echo "      Try running without -d to build pldmgr locally instead."
         exit 1
     fi
 
